@@ -1,33 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "GitHub Show Reviewer",
-  "version": "1.0.2",
-  "description": "Display reviewer in GitHub PR list view.",
-  "permissions": [
-    "storage"
-  ],
-  "host_permissions": [
-    "https://github.com/*",
-    "https://api.github.com/*"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-        "https://github.com/*/*"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "css": [
-        "style.css"
-      ]
-    }
-  ],
-  "options_page": "options.html",
-  "background": {
-    "service_worker": "background.js"
-  },
-  "icons": {
-    "128": "icons/icon.png"
-  }
+  "name": "GitHub Show Reviewer Bridge",
+  "version": "2.0.0",
+  "minimum_chrome_version": "120",
+  "description": "Display PR reviewers using your local GitHub CLI authentication.",
+  "permissions": ["nativeMessaging", "storage"],
+  "host_permissions": ["https://github.com/*"],
+  "content_scripts": [{ "matches": ["https://github.com/*"], "js": ["content.js"], "css": ["style.css"] }],
+  "background": { "service_worker": "background.js" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'" },
+  "icons": { "128": "icons/icon.png" }
 }

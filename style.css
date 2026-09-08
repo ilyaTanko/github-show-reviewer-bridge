@@ -1,47 +1,31 @@
 .github-show-reviewer {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 2px;
   white-space: normal;
   color: var(--fgColor-muted, #656d76);
   font-weight: normal;
 }
-
-/* 他の issue-meta-section と同じように、アイコンを表示 */
-.github-show-reviewer svg {
-  vertical-align: text-bottom;
-  margin-right: 4px;
+.github-show-reviewer .reviewer-link {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
 }
-
-/* .github-show-reviewer--success {
-  color: var(--fgColor-success, #1a7f37);
-} */
-
-/* Reviewer: の部分をグレー色で表示 */
-/* .github-show-reviewer strong {
-  color: var(--fgColor-muted, #656d76);
-  font-weight: normal;
-} */
-/* 太字の場合 */
-/* font-weight: 600; */
-
-/* レビュワーリンクのスタイル（通常はグレー、ホバー時に青色） */
-.reviewer-link {
-  color: var(--fgColor-muted, #656d76);
-  /* text-decoration: none; */
-  text-decoration: underline;
+.github-show-reviewer .reviewer-link:hover {
+  color: var(--fgColor-accent, #0969da);
+}
+.github-show-reviewer button {
   cursor: pointer;
 }
 
-.reviewer-link:hover {
-  color: var(--fgColor-accent, #0969da);
-  /* text-decoration: none; */
-  text-decoration: underline;
-}
-
-/* None の場合はグレー色で表示 */
-.reviewer-none {
-  color: var(--fgColor-muted, #656d76);
-}
-
-/* N/A の場合は赤色で表示 */
-.reviewer-na {
-  color: var(--fgColor-danger, #cf222e);
+.github-show-reviewer .review-status {
+  width: 1em;
+  height: 1em;
+  margin-left: 0.2em;
+  vertical-align: -0.125em;
+  color: inherit;
 }
