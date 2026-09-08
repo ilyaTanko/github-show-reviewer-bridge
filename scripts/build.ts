@@ -4,7 +4,7 @@ import { HOST_NAME, isHostAllowlist } from '../src/protocol.ts';
 
 const config = JSON.parse(await readFile('bridge.config.json', 'utf8')) as { hosts: unknown };
 if (!isHostAllowlist(config.hosts)) throw new Error('bridge.config.json: specify explicit lowercase GitHub hostnames.');
-const hosts = [...new Set(config.hosts)] as string[];
+const hosts = [...new Set(config.hosts)];
 const development = process.env.BRIDGE_DEVELOPMENT === '1';
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/extension', { recursive: true });

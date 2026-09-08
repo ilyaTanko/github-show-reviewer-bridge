@@ -1,5 +1,5 @@
 import { failure, record, sanitizeResponse, isReviewState } from '../protocol.ts';
-import type { Request, Response, Pull, Review } from '../protocol.ts';
+import type { Request, Response, Pull, Review, Reviewer } from '../protocol.ts';
 import { classifyError } from './github-cli.ts';
 import type { RunQuery } from './github-cli.ts';
 
@@ -73,7 +73,7 @@ type PullProgress = {
   number: number;
   requested: Page;
   reviewed: Page;
-  pull: Pull;
+  requestedReviewers: Reviewer[];
   latest: Map<string, { time: string; review: Review }>;
 };
 
@@ -82,7 +82,7 @@ function createPullProgress(number: number): PullProgress {
     number,
     requested: { done: false, cursor: null },
     reviewed: { done: false, cursor: null },
-    pull: { requestedReviewers: [], reviews: [] },
+    requestedReviewers: [],
     latest: new Map(),
   };
 }
@@ -142,13 +142,13 @@ function collectRequestedReviewers(value: unknown, progress: PullProgress): numb
     if (!hasRequestedReviewer(node)) continue;
     const actor = node.requestedReviewer;
     if (isTeamActor(actor)) {
-      progress.pull.requestedReviewers.push({
+      progress.requestedReviewers.push({
         kind: 'team',
         slug: cleanDisplayText(actor.slug, ''),
         displayName: cleanDisplayText(actor.teamName, actor.slug),
       });
     } else if (typeof actor.login === 'string') {
-      progress.pull.requestedReviewers.push({
+      progress.requestedReviewers.push({
         kind: 'user',
         login: cleanDisplayText(actor.login, ''),
         displayName: cleanDisplayText(actor.userName, actor.login),
@@ -195,7 +195,7 @@ function buildReviewerResponse(request: Request, pulls: PullProgress[]): Respons
   const pullRequests: Record<string, Pull> = {};
   for (const progress of pulls) {
     pullRequests[progress.number] = {
-      requestedReviewers: progress.pull.requestedReviewers,
+      requestedReviewers: progress.requestedReviewers,
       reviews: [...progress.latest.values()].map(entry => entry.review),
     };
   }

@@ -17,7 +17,7 @@ export type Request = {
   version: 1; type: 'getPullRequestReviewers'; host: string; owner: string; repo: string; pullNumbers: number[];
 };
 export type Reviewer = { kind: 'user'; login: string; displayName: string } | { kind: 'team'; slug: string; displayName: string };
-export const states = ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED'] as const;
+const states = ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED'] as const;
 export type Review = { login: string; displayName: string; state: typeof states[number] };
 export type Pull = { requestedReviewers: Reviewer[]; reviews: Review[] };
 export type Success = { version: 1; type: 'pullRequestReviewers'; host: string; owner: string; repo: string; pullRequests: Record<string, Pull> };
@@ -118,7 +118,7 @@ function sanitizeReviewer(value: unknown): Reviewer | undefined {
 
 function sanitizeReview(value: unknown): Review | undefined {
   if (!isDisplayReview(value)) return;
-  return { login: value.login, displayName: value.displayName, state: value.state as Review['state'] };
+  return { login: value.login, displayName: value.displayName, state: value.state };
 }
 
 function sanitizePull(value: unknown): Pull | undefined {
