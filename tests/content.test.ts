@@ -12,6 +12,7 @@ class Element {
   attributes: Record<string, string> = {};
   setAttribute(key: string, value: string) { this.attributes[key] = value; }
   parent?: Element;
+  get parentElement(): Element | null { return this.parent ?? null; }
   click?: () => void;
   get isConnected(): boolean { return this.parent !== undefined; }
   append(...children: (Element | string)[]) { for (const child of children) { if (child instanceof Element) child.parent = this; this.children.push(child); } }
@@ -22,11 +23,20 @@ class Element {
   }
   replaceChildren(...children: (Element | string)[]) { this.children = []; this.append(...children); }
   remove() { if (this.parent) this.parent.children = this.parent.children.filter(c => c !== this); this.parent = undefined; }
+  closest(selector: string): Element | null {
+    if (selector !== 'li') return null;
+    for (let element: Element | undefined = this; element; element = element.parent) {
+      if (element.attributes['data-list-item'] === 'true') return element;
+    }
+    return null;
+  }
   addEventListener(_name: string, fn: () => void) { this.click = fn; }
   querySelector(selector: string): Element | null {
     for (const child of this.children) {
       if (!(child instanceof Element)) continue;
-      if (selector === 'a.Link--primary[href*="/pull/"]' && child.className === 'Link--primary') return child;
+      if ((selector.includes('a.Link--primary') && child.className === 'Link--primary') ||
+          (selector.includes('a[data-testid="listitem-title-link"]') && child.attributes['data-testid'] === 'listitem-title-link')) return child;
+      if (selector === '[data-testid="timestamp-container"]' && child.attributes['data-testid'] === 'timestamp-container') return child;
       if (selector.startsWith('.d-flex') && child.className === 'meta') return child;
       if (selector === '.github-show-reviewer' && child.className.includes('github-show-reviewer')) return child;
       const nested = child.querySelector(selector); if (nested) return nested;
@@ -65,7 +75,7 @@ test('content batches canonical PR links, renders safely, retries and handles SP
   const source = await readFile('dist/extension/content.js', 'utf8');
   runInNewContext(source, {
     URL, location,
-    document: { body: new Element(), createElement: () => new Element(), createElementNS: () => new Element(), addEventListener() {}, querySelectorAll: (selector: string) => selector === '.js-issue-row' ? rows : rows.map(r => r.querySelector('.github-show-reviewer')).filter(Boolean) },
+    document: { body: new Element(), createElement: () => new Element(), createElementNS: () => new Element(), addEventListener() {}, querySelectorAll: (selector: string) => selector === '.js-issue-row' ? rows : selector === '[data-listview-component="items-list"] > li' ? [] : rows.map(r => r.querySelector('.github-show-reviewer')).filter(Boolean) },
     window: { addEventListener() {} },
     MutationObserver: class { constructor(fn: () => void) { observe = fn; } observe() {} },
     setTimeout: (fn: () => void) => { timers.set(++timer, fn); return timer; }, clearTimeout: (id: number) => timers.delete(id), setInterval: (fn: () => void) => { urlTick = fn; },
@@ -108,4 +118,29 @@ test('content batches canonical PR links, renders safely, retries and handles SP
   assert.equal(calls.at(-1)!.pullNumbers.length, 1);
   location.pathname = '/platform/frontend/issues'; location.href = location.origin + location.pathname; urlTick!(); await flush();
   assert.equal(rows[0].querySelector('.github-show-reviewer'), null);
+});
+
+test('content supports the Preview pull-request list', async () => {
+  const row = new Element(); const link = new Element(); const description = new Element(); const timestamp = new Element();
+  row.attributes['data-list-item'] = 'true';
+  timestamp.attributes['data-testid'] = 'timestamp-container';
+  link.href = 'https://github.example.internal/platform/frontend/pull/1'; link.attributes['data-testid'] = 'listitem-title-link';
+  description.append(timestamp); row.append(link, description);
+  const location = { href: 'https://github.example.internal/platform/frontend/pulls?q=is%3Apr', hostname: 'github.example.internal', origin: 'https://github.example.internal', pathname: '/platform/frontend/pulls' };
+  const timers = new Map<number, () => void>(); let timer = 0;
+  let calls = 0;
+  const source = await readFile('dist/extension/content.js', 'utf8');
+  runInNewContext(source, {
+    URL, location,
+    document: { body: new Element(), createElement: () => new Element(), createElementNS: () => new Element(), addEventListener() {}, querySelectorAll: (selector: string) => selector === '.js-issue-row' ? [] : selector === '[data-listview-component="items-list"] > li' ? [row] : [row.querySelector('.github-show-reviewer')].filter(Boolean) },
+    window: { addEventListener() {} }, MutationObserver: class { constructor(_fn: () => void) {} observe() {} },
+    setTimeout: (fn: () => void) => { timers.set(++timer, fn); return timer; }, clearTimeout: (id: number) => timers.delete(id), setInterval() {},
+    chrome: { runtime: { sendMessage: async (request: Request) => { calls++; return { version: 1, type: 'pullRequestReviewers', host: request.host, owner: request.owner, repo: request.repo, pullRequests: { 1: { requestedReviewers: [], reviews: [] } } }; } } },
+  });
+  const jobs = [...timers.values()]; timers.clear(); jobs.forEach(fn => fn()); await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1);
+  const span = row.querySelector('.github-show-reviewer');
+  assert.ok(span);
+  assert.equal(span.parent, row);
+  assert.equal(row.children.indexOf(span!), row.children.indexOf(description) + 1);
 });

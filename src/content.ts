@@ -74,14 +74,16 @@ function isCurrentScan(current: number): boolean {
 }
 
 function prepareReviewerRow(row: Element, owner: string, repo: string): ReviewerRow | undefined {
-  const link = row.querySelector<HTMLAnchorElement>('a.Link--primary[href*="/pull/"]');
+  const link = row.querySelector<HTMLAnchorElement>('a.Link--primary[href*="/pull/"]') ??
+    row.querySelector<HTMLAnchorElement>('a[data-testid="listitem-title-link"]');
   if (!link) return;
   const url = new URL(link.href, location.href);
   const path = url.pathname.match(/^\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/);
   if (!isRepositoryPullUrl(url, path, owner, repo)) return;
   const identity = `${generation}/${url.pathname}`;
   if (hasReviewerDisplay(row, identity)) return;
-  const meta = row.querySelector('.d-flex.mt-1.text-small.color-fg-muted');
+  const meta = row.querySelector<HTMLElement>('.d-flex.mt-1.text-small.color-fg-muted') ??
+    link.closest('li')?.querySelector<HTMLElement>('[data-testid="timestamp-container"]')?.parentElement;
   if (!meta) return;
   const number = Number(path[3]);
   if (!isPullNumber(number)) return;
@@ -117,7 +119,11 @@ async function scan() {
   if (!page) return;
   const current = generation;
   const rows: ReviewerRow[] = [];
-  for (const row of document.querySelectorAll('.js-issue-row')) {
+  const rowsOnPage = [
+    ...document.querySelectorAll('.js-issue-row'),
+    ...document.querySelectorAll('[data-listview-component="items-list"] > li'),
+  ];
+  for (const row of rowsOnPage) {
     const prepared = prepareReviewerRow(row, page[1], page[2]);
     if (prepared) rows.push(prepared);
   }
