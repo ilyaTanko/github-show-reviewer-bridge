@@ -34,12 +34,12 @@ GitHub Enterprise Cloud on `github.com` uses the same steps. For a different hos
 
 ## ✨ Features
 
-- See requested users, teams, and people or bots who have submitted reviews.
-- Read review states at a glance with [Octicons](https://primer.style/octicons/).
+- See requested users, teams, and people or bots who have submitted reviews as avatars on each PR's metadata line, so the compact list view stays compact.
+- Read review states at a glance: a green ring for approvals, a dashed yellow ring for change requests, and an [Octicons](https://primer.style/octicons/) badge for comments and dismissed reviews.
 - Keep approvals and change requests visible even after later comments.
-- Filter pull requests by clicking a reviewer name.
+- Click an avatar to search pull requests requested from or reviewed by that reviewer.
+- Filter the current page with the **Pending reviews by** bar, which counts open review requests per reviewer.
 - Use existing GitHub CLI credentials without entering a token in the extension.
-- Keep the original PR metadata layout intact with reviewers on a separate line.
 
 ## 🛠️ Build from Source
 
@@ -140,7 +140,9 @@ The extension works on repository PR lists at `https://HOST/OWNER/REPO/pulls`. D
 
 Review decisions use the latest approval or change request for each reviewer. Later comments do not replace those decisions. Without an active decision, the latest comment or dismissed review is shown. Reviews submitted by the PR author are excluded. `None` means there are no requested reviewers or displayed reviews.
 
-Hover over a review icon to read its status; screen readers receive the same label. Icons inherit the text color.
+Hover over an avatar to read the reviewer and review status; screen readers receive the same label. A reviewer who is requested again after reviewing is shown as pending, and the label names the earlier state. Each PR shows up to five reviewers; hover `+N` for the rest.
+
+The **Pending reviews by** bar lists requested reviewers and reviewers without an approval or change request, with the number of PRs on the current page waiting for each. Click one to show only those PRs, and click it again to clear the filter. It does not search other pages; use the avatar links for that.
 
 | Symptom | What to check |
 | --- | --- |
@@ -182,5 +184,7 @@ For development installations, use the registration name ending in `.development
 ## 📄 License and Credits
 
 This project is a modified fork of [araitaiga/github_show_reviewer](https://github.com/araitaiga/github_show_reviewer), originally created by Taiga Arai. This fork adds the TypeScript implementation and GitHub CLI bridge and is distributed separately from the original Chrome Web Store extension.
+
+The inline avatar layout, review-state rings, and **Pending reviews by** bar are adapted from [elanza-nl/github-pr-enhancer](https://github.com/elanza-nl/github-pr-enhancer) (MIT), another fork of the original extension.
 
 Released under the [MIT License](LICENSE), with copyright notices for Taiga Arai and Takara Hamaguchi. Octicons retain their own MIT license; see [Third-party notices](THIRD_PARTY_NOTICES.md).
